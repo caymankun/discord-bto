@@ -22,7 +22,7 @@ async def on_ready():
 async def connect(interaction: discord.Interaction):
     if interaction.user.voice:  # interactionから相互作用を発生させたユーザーを取得し、そのメンバーがボイスチャンネルに接続しているか確認します
         voice_channel = await interaction.user.voice.channel.connect()
-        await interaction.response.send_message(f'{interaction.user.name}さんのボイスチャンネルに接続しました。')
+        await interaction.response.send_message(f'ボイスチャンネルに接続しました。')
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
