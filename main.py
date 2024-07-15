@@ -62,7 +62,7 @@ async def on_message(message):
         content = re.sub(r'https?://\S+', 'URL', content)
         content = re.sub(r'\|\|([^|]+)\|\|', r'\1', content)
 
-        await play_voice(content, message.guild)
+        await play_voice(message.content, message.guild)
 
 async def play_voice(text, guild):
     # Text to speech using gTTS and save as WAV
