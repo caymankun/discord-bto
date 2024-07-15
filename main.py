@@ -22,7 +22,7 @@ async def on_ready():
 async def connect(interaction: discord.Interaction):
     if interaction.author.voice:
         voice_channel = await interaction.author.voice.channel.connect()
-        await interaction.response.send_message(f'{ctx.author.name}さんのボイスチャンネルに接続しました。')
+        await interaction.response.send_message(f'{interaction.author.name}さんのボイスチャンネルに接続しました。')
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
