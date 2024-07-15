@@ -2,7 +2,6 @@ import discord
 import requests
 from discord.channel import VoiceChannel
 from discord.player import FFmpegPCMAudio
-import pydub
 import os
 
 TOKEN = os.getenv('TOKEN')
