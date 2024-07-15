@@ -1,12 +1,9 @@
 import discord
 import requests
-from discord.channel import VoiceChannel
 from discord.player import FFmpegPCMAudio
 import os
 
 TOKEN = os.getenv('TOKEN')
-
-voiceChannel: VoiceChannel 
 
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
@@ -15,27 +12,33 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print('サービス起動。')
+    print('サービス起動しました。')
 
 @client.event
 async def on_message(message):
-    global voiceChannel
-
     if message.author.bot:
         return
-    if message.content == '/connect':
-        voiceChannel = await VoiceChannel.connect(message.author.voice.channel)
-        await message.channel.send('入出しました。')
-        return
+    
+    if message.content.startswith('/play'):
+        text = message.content[len('/play'):].strip()
+        await play_voice(text, message.channel)
+    
+    elif message.content == '/connect':
+        if message.author.voice:
+            voice_channel = await message.author.voice.channel.connect()
+            await message.channel.send('ボイスチャンネルに接続しました。')
+        else:
+            await message.channel.send('ボイスチャンネルに接続していません。')
+    
     elif message.content == '/disconnect':
-        voiceChannel.stop()
-        await message.channel.send('退出しました。')
-        await voiceChannel.disconnect()
-        return
+        voice_client = message.guild.voice_client
+        if voice_client:
+            await voice_client.disconnect()
+            await message.channel.send('ボイスチャンネルから切断しました。')
+        else:
+            await message.channel.send('ボイスチャンネルに接続していません。')
 
-    play_voice(message.content)
-
-def play_voice(text):
+async def play_voice(text, text_channel):
     # APIのURLとテキストを組み合わせてリクエストを送信
     url = f"https://apis.caymankun.f5.si/tts/speach.php?text={text}"
     response = requests.get(url)
@@ -45,8 +48,12 @@ def play_voice(text):
         with open("out.wav", "wb") as f:
             f.write(response.content)
         
-        # MP3をDiscordのボイスチャンネルで再生
-        voiceChannel.play(FFmpegPCMAudio("out.wav"))
+        # Discordのボイスチャンネルで再生
+        voice_client = text_channel.guild.voice_client
+        if voice_client:
+            voice_client.play(FFmpegPCMAudio("out.wav"))
+        else:
+            await text_channel.send('ボイスチャンネルに接続していません。音声を再生できません。')
 
     else:
         print(f"Failed to fetch voice from API. Status code: {response.status_code}")
