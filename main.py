@@ -20,9 +20,9 @@ async def on_ready():
 
 @tree.command(name='connect', description='ボットをボイスチャンネルに接続します')
 async def connect(interaction: discord.Interaction):
-    if interaction.author.voice:  # interactionから送信者を取得し、そのメンバーがボイスチャンネルに接続しているか確認します
-        voice_channel = await interaction.author.voice.channel.connect()
-        await interaction.response.send_message(f'{interaction.author.name}さんのボイスチャンネルに接続しました。')
+    if interaction.user.voice:  # interactionから相互作用を発生させたユーザーを取得し、そのメンバーがボイスチャンネルに接続しているか確認します
+        voice_channel = await interaction.user.voice.channel.connect()
+        await interaction.response.send_message(f'{interaction.user.name}さんのボイスチャンネルに接続しました。')
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
