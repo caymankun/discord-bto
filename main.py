@@ -16,16 +16,16 @@ bot = commands.Bot(command_prefix='/', intents=intents)   # プレフィック�
 async def on_ready():
     print('サービス起動しました。')
 
-@bot.command(name="connect", description="ボットをユーザーのボイスチャンネルに接続します")
-async def connect_voice(ctx):
+@bot.command(name='connect', description='ボットをボイスチャンネルに接続します')
+async def connect(ctx):
     if ctx.author.voice:
         voice_channel = await ctx.author.voice.channel.connect()
         await ctx.send(f'{ctx.author.name}さんのボイスチャンネルに接続しました。')
     else:
         await ctx.send('ボイスチャンネルに接続していません。')
 
-@bot.command(name="disconnect", description="ボットをボイスチャンネルから切断します")
-async def disconnect_voice(ctx):
+@bot.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
+async def disconnect(ctx):
     voice_client = ctx.guild.voice_client
     if voice_client:
         await voice_client.disconnect()
