@@ -1,6 +1,6 @@
 import discord
 import requests
-from discord.ext import commands
+from discord import app_commands
 from discord.player import FFmpegPCMAudio
 import os
 import re
@@ -10,13 +10,15 @@ TOKEN = os.getenv('TOKEN')
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
 
-bot = commands.Bot(command_prefix='/', intents=intents)   # プレフィックスを '/' に設定
+bot = discord.Client(intents=intents)   # プレフィックスを '/' に設定
+tree = app_commands.CommandTree(bot)
 
 @bot.event
 async def on_ready():
     print('サービス起動しました。')
+    await tree.sync()
 
-@bot.command(name='connect', description='ボットをボイスチャンネルに接続します')
+@tree.command(name='connect', description='ボットをボイスチャンネルに接続します')
 async def connect(ctx):
     if ctx.author.voice:
         voice_channel = await ctx.author.voice.channel.connect()
@@ -24,7 +26,7 @@ async def connect(ctx):
     else:
         await ctx.send('ボイスチャンネルに接続していません。')
 
-@bot.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
+@tree.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
 async def disconnect(ctx):
     voice_client = ctx.guild.voice_client
     if voice_client:
