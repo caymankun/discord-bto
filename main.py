@@ -44,7 +44,7 @@ async def on_message(message):
     if message.content.startswith('/connect'):
         if message.author.voice:  # メッセージから送信者を取得し、そのメンバーがボイスチャンネルに接続しているか確認します
             voice_channel = await message.author.voice.channel.connect()
-            await message.channel.send(f'{message.author.name}さんのボイスチャンネルに接続しました。')
+            await message.channel.send(f'ボイスチャンネルに接続しました。')
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
 
@@ -77,19 +77,19 @@ async def play_voice(text, guild):
         with open("out.mp3", "wb") as f:
             f.write(response.content)
         
-        # Convert MP3 to Opus using FFmpeg (ensure FFmpeg is installed in your environment)
-        subprocess.run(['ffmpeg', '-i', 'out.mp3', '-y', '-vn', '-ar', '48000', '-ac', '2', '-b:a', '192k', 'out.opus'])
+        # Convert MP3 to WAV using FFmpeg (ensure FFmpeg is installed in your environment)
+        subprocess.run(['ffmpeg', '-i', 'out.mp3', '-y', '-vn', '-ar', '48000', '-ac', '2', '-b:a', '192k', 'out.wav'])
 
-        # Get the voice client of the command invoker
-        voice_client = ctx.author.voice.channel.guild.voice_client
+        # Get the voice client of the guild (not through message context)
+        voice_client = guild.voice_client
         
         if voice_client:
-            # Play the Opus file in the voice channel
-            voice_client.play(FFmpegPCMAudio('out.opus'))
+            # Play the WAV file in the voice channel
+            voice_client.play(FFmpegPCMAudio('out.wav'))
         else:
-            await ctx.send('ボイスチャンネルに接続していません。')
+            await guild.text_channels[0].send('ボイスチャンネルに接続していません。')
 
     else:
-        await ctx.send(f"Failed to fetch voice from API. Status code: {response.status_code}")
+        await guild.text_channels[0].send(f"Failed to fetch voice from API. Status code: {response.status_code}")
 
 bot.run(TOKEN)
