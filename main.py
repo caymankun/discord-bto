@@ -19,21 +19,21 @@ async def on_ready():
     await tree.sync()
 
 @tree.command(name='connect', description='ボットをボイスチャンネルに接続します')
-async def connect(ctx):
-    if ctx.author.voice:
-        voice_channel = await ctx.author.voice.channel.connect()
-        await ctx.send(f'{ctx.author.name}さんのボイスチャンネルに接続しました。')
+async def connect(interaction: discord.Interaction):
+    if interaction.author.voice:
+        voice_channel = await interaction.author.voice.channel.connect()
+        await interaction.response.send_message(f'{ctx.author.name}さんのボイスチャンネルに接続しました。')
     else:
-        await ctx.send('ボイスチャンネルに接続していません。')
+        await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
 @tree.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
-async def disconnect(ctx):
-    voice_client = ctx.guild.voice_client
+async def disconnect(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
     if voice_client:
         await voice_client.disconnect()
-        await ctx.send('ボイスチャンネルから切断しました。')
+        await interaction.response.send_message('ボイスチャンネルから切断しました。')
     else:
-        await ctx.send('ボイスチャンネルに接続していません。')
+        await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
 @bot.event
 async def on_message(message):
