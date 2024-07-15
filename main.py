@@ -4,6 +4,7 @@ from discord.player import FFmpegPCMAudio
 import os
 import re
 import requests
+import subprocess
 
 TOKEN = os.getenv('TOKEN')
 
@@ -72,18 +73,23 @@ async def play_voice(text, guild):
     response = requests.get(url)
     
     if response.status_code == 200:
-        # レスポンスから音声ファイルを取得し、一時ファイルとして保存
-        with open("out.wav", "wb") as f:
+        # Save MP3 to a temporary file
+        with open("out.mp3", "wb") as f:
             f.write(response.content)
         
-        # Discordのボイスチャンネルで再生
-        voice_client = guild.voice_client
+        # Convert MP3 to Opus using FFmpeg (ensure FFmpeg is installed in your environment)
+        subprocess.run(['ffmpeg', '-i', 'out.mp3', '-y', '-vn', '-ar', '48000', '-ac', '2', '-b:a', '192k', 'out.opus'])
+
+        # Get the voice client of the command invoker
+        voice_client = ctx.author.voice.channel.guild.voice_client
+        
         if voice_client:
-            voice_client.play(FFmpegPCMAudio("out.wav"))
+            # Play the Opus file in the voice channel
+            voice_client.play(FFmpegPCMAudio('out.opus'))
         else:
-            print('ボイスチャンネルに接続していません。音声を再生できません。')
+            await ctx.send('ボイスチャンネルに接続していません。')
 
     else:
-        print(f"Failed to fetch voice from API. Status code: {response.status_code}")
+        await ctx.send(f"Failed to fetch voice from API. Status code: {response.status_code}")
 
 bot.run(TOKEN)
