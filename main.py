@@ -1,9 +1,9 @@
 import discord
-import requests
 from discord import app_commands
 from discord.player import FFmpegPCMAudio
 import os
 import re
+import requests
 
 TOKEN = os.getenv('TOKEN')
 
@@ -19,16 +19,16 @@ async def on_ready():
     await tree.sync()
 
 @tree.command(name='connect', description='ボットをボイスチャンネルに接続します')
-async def connect(interaction: discord.Interaction, user: discord.User):
-    if user.voice:
-        voice_channel = await user.voice.channel.connect()
-        await interaction.response.send_message(f'{user.name}さんのボイスチャンネルに接続しました。')
+async def connect(interaction: discord.Interaction):
+    if interaction.author.voice:  # interactionから送信者を取得し、そのメンバーがボイスチャンネルに接続しているか確認します
+        voice_channel = await interaction.author.voice.channel.connect()
+        await interaction.response.send_message(f'{interaction.author.name}さんのボイスチャンネルに接続しました。')
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
 @tree.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
-async def disconnect(interaction: discord.Interaction, user: discord.User):
-    voice_client = user.guild.voice_client
+async def disconnect(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
     if voice_client:
         await voice_client.disconnect()
         await interaction.response.send_message('ボイスチャンネルから切断しました。')
@@ -41,7 +41,7 @@ async def on_message(message):
         return
 
     if message.content.startswith('/connect'):
-        if message.author.voice:
+        if message.author.voice:  # メッセージから送信者を取得し、そのメンバーがボイスチャンネルに接続しているか確認します
             voice_channel = await message.author.voice.channel.connect()
             await message.channel.send(f'{message.author.name}さんのボイスチャンネルに接続しました。')
         else:
@@ -61,8 +61,8 @@ async def on_message(message):
         # URLを置き換える
         content = re.sub(r'https?://\S+', 'URL', content)
 
-        # ネタばれコンテンツを置き換える
-        content = re.sub(r'ネタばれコンテンツ', 'ネタばれコンテンツ', content)
+        # ||で囲まれたテキストを置き換える
+        content = re.sub(r'\|\|([^|]+)\|\|', r'\1', content)
 
         await play_voice(content, message.guild)
 
