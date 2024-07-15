@@ -1,36 +1,52 @@
 import discord
 import requests
+from discord.ext import commands
 from discord.player import FFmpegPCMAudio
 import os
+import re
 
 TOKEN = os.getenv('TOKEN')
 
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
 
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix='/')  # プレフィックスを '/' に設定
+bot.intents = intents
 
-@client.event
+@bot.event
 async def on_ready():
     print('サービス起動しました。')
 
-@client.event
+@bot.command(name="connect", description="ボットをユーザーのボイスチャンネルに接続します")
+async def connect_voice(ctx):
+    if ctx.author.voice:
+        voice_channel = await ctx.author.voice.channel.connect()
+        await ctx.send(f'{ctx.author.name}さんのボイスチャンネルに接続しました。')
+    else:
+        await ctx.send('ボイスチャンネルに接続していません。')
+
+@bot.command(name="disconnect", description="ボットをボイスチャンネルから切断します")
+async def disconnect_voice(ctx):
+    voice_client = ctx.guild.voice_client
+    if voice_client:
+        await voice_client.disconnect()
+        await ctx.send('ボイスチャンネルから切断しました。')
+    else:
+        await ctx.send('ボイスチャンネルに接続していません。')
+
+@bot.event
 async def on_message(message):
-    if message.author.bot:
+    if message.author == bot.user:  # ボット自身のメッセージは無視
         return
-    
-    if message.content.startswith('/play'):
-        text = message.content[len('/play'):].strip()
-        await play_voice(text, message.channel)
-    
-    elif message.content == '/connect':
+
+    if message.content.startswith('/connect'):
         if message.author.voice:
             voice_channel = await message.author.voice.channel.connect()
-            await message.channel.send('ボイスチャンネルに接続しました。')
+            await message.channel.send(f'{message.author.name}さんのボイスチャンネルに接続しました。')
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
-    
-    elif message.content == '/disconnect':
+
+    elif message.content.startswith('/disconnect'):
         voice_client = message.guild.voice_client
         if voice_client:
             await voice_client.disconnect()
@@ -38,7 +54,18 @@ async def on_message(message):
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
 
-async def play_voice(text, text_channel):
+    elif message.guild.voice_client:  # ボットがボイスチャンネルに接続している場合のみ処理
+        content = message.content
+
+        # URLを置き換える
+        content = re.sub(r'https?://\S+', 'URL', content)
+
+        # ネタばれコンテンツを置き換える
+        content = re.sub(r'ネタばれコンテンツ', 'ネタばれコンテンツ', content)
+
+        await play_voice(content, message.guild)
+
+async def play_voice(text, guild):
     # APIのURLとテキストを組み合わせてリクエストを送信
     url = f"https://apis.caymankun.f5.si/tts/speach.php?text={text}"
     response = requests.get(url)
@@ -49,13 +76,13 @@ async def play_voice(text, text_channel):
             f.write(response.content)
         
         # Discordのボイスチャンネルで再生
-        voice_client = text_channel.guild.voice_client
+        voice_client = guild.voice_client
         if voice_client:
             voice_client.play(FFmpegPCMAudio("out.wav"))
         else:
-            await text_channel.send('ボイスチャンネルに接続していません。音声を再生できません。')
+            print('ボイスチャンネルに接続していません。音声を再生できません。')
 
     else:
         print(f"Failed to fetch voice from API. Status code: {response.status_code}")
 
-client.run(TOKEN)
+bot.run(TOKEN)
