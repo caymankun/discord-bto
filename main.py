@@ -3,8 +3,9 @@ import requests
 from discord.channel import VoiceChannel
 from discord.player import FFmpegPCMAudio
 import pydub
+import os
 
-TOKEN = 
+TOKEN = os.getenv('TOKEN')
 client = discord.Client()
 
 voiceChannel: VoiceChannel 
@@ -38,11 +39,11 @@ def play_voice(text):
     
     if response.status_code == 200:
         # レスポンスから音声ファイルを取得し、一時ファイルとして保存
-        with open("out.mp3", "wb") as f:
+        with open("out.wav", "wb") as f:
             f.write(response.content)
         
         # MP3をDiscordのボイスチャンネルで再生
-        voiceChannel.play(FFmpegPCMAudio("out.mp3"))
+        voiceChannel.play(FFmpegPCMAudio("out.wav"))
 
     else:
         print(f"Failed to fetch voice from API. Status code: {response.status_code}")
