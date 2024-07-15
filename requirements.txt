@@ -2,3 +2,4 @@ requests
 discord.py
 pynacl
 ffmpeg
+gtts
