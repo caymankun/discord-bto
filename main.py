@@ -10,8 +10,7 @@ TOKEN = os.getenv('TOKEN')
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
 
-bot = commands.Bot(command_prefix='/')  # プレフィックスを '/' に設定
-bot.intents = intents
+bot = commands.Bot(command_prefix='/', intents=intents)   # プレフィックスを '/' に設定
 
 @bot.event
 async def on_ready():
