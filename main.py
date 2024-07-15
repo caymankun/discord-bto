@@ -9,6 +9,11 @@ client = discord.Client()
 
 voiceChannel: VoiceChannel 
 
+intents = discord.Intents.default()
+intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
+
+client = discord.Client(intents=intents)
+
 @client.event
 async def on_ready():
     print('サービス起動。')
