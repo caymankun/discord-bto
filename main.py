@@ -5,7 +5,6 @@ from discord.player import FFmpegPCMAudio
 import os
 
 TOKEN = os.getenv('TOKEN')
-client = discord.Client()
 
 voiceChannel: VoiceChannel 
 
