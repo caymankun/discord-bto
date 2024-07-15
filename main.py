@@ -5,6 +5,7 @@ import os
 import re
 import requests
 import subprocess
+from gtts import gTTS
 
 TOKEN = os.getenv('TOKEN')
 
@@ -56,40 +57,25 @@ async def on_message(message):
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
 
-    elif message.guild.voice_client:  # ボットがボイスチャンネルに接続している場合のみ処理
+    elif message.guild.voice_client:
         content = message.content
-
-        # URLを置き換える
         content = re.sub(r'https?://\S+', 'URL', content)
-
-        # ||で囲まれたテキストを置き換える
         content = re.sub(r'\|\|([^|]+)\|\|', r'\1', content)
 
         await play_voice(content, message.guild)
 
 async def play_voice(text, guild):
-    # APIのURLとテキストを組み合わせてリクエストを送信
-    url = f"https://apis.caymankun.f5.si/tts/speach.php?text={text}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        # Save MP3 to a temporary file
-        with open("out.mp3", "wb") as f:
-            f.write(response.content)
-        
-        # Convert MP3 to WAV using FFmpeg (ensure FFmpeg is installed in your environment)
-        subprocess.run(['ffmpeg', '-i', 'out.mp3', '-y', '-vn', '-ar', '48000', '-ac', '2', '-b:a', '192k', 'out.wav'])
+    # Text to speech using gTTS and save as WAV
+    tts = gTTS(text=text, lang='ja')
+    tts.save('out.wav')
 
-        # Get the voice client of the guild (not through message context)
-        voice_client = guild.voice_client
-        
-        if voice_client:
-            # Play the WAV file in the voice channel
-            voice_client.play(FFmpegPCMAudio('out.wav'))
-        else:
-            await guild.text_channels[0].send('ボイスチャンネルに接続していません。')
-
+    # Get voice client
+    voice_client = guild.voice_client
+    if voice_client:
+        # Play WAV file in the voice channel
+        voice_client.play(FFmpegPCMAudio('out.wav'))
     else:
-        await guild.text_channels[0].send(f"Failed to fetch voice from API. Status code: {response.status_code}")
+        await guild.text_channels[0].send('ボイスチャンネルに接続していません。')
+
 
 bot.run(TOKEN)
