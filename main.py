@@ -70,7 +70,22 @@ async def on_voice_state_update(member, before, after):
     if member == bot.user:
         return
 
-    voice_channel = before.channel
+    if before.channel is None and after.channel is not None:
+        # ユーザーがボイスチャンネルに参加した
+        message = f"{member.display_name}がボイスチャンネルに参加しました。"
+    elif before.channel is not None and after.channel is None:
+        # ユーザーがボイスチャンネルから退出した
+        message = f"{member.display_name}がボイスチャンネルから退出しました。"
+    else:
+        return
+
+    # ボイスチャンネルにメッセージを送信
+    voice_client = after.channel.guild.voice_client if after.channel else before.channel.guild.voice_client
+    if voice_client:
+        await play_voice(message, voice_client.guild)
+
+    # もしボイスチャンネルにボット以外のメンバーがいない場合、ボットを切断
+    voice_channel = before.channel if before.channel is not None else after.channel
     if voice_channel and len(voice_channel.members) == 1:
         voice_client = voice_channel.guild.voice_client
         if voice_client:
