@@ -10,7 +10,7 @@ from pydub import AudioSegment
 
 TOKEN = os.getenv('TOKEN')
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.voice_states = True  # ボイスチャンネルの状態トラッキングが必要な場合に設定
 
 bot = discord.Client(intents=intents)   # プレフィックスを '/' に設定
