@@ -6,6 +6,7 @@ import re
 import requests
 import subprocess
 from gtts import gTTS
+from pydub import AudioSegment
 
 TOKEN = os.getenv('TOKEN')
 
@@ -62,12 +63,28 @@ async def on_message(message):
         content = re.sub(r'https?://\S+', 'URL', content)
         content = re.sub(r'\|\|([^|]+)\|\|', r'\1', content)
 
-        await play_voice(message.content, message.guild)
+        await play_voice(content, message.guild)
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if member == bot.user:
+        return
+
+    voice_channel = before.channel
+    if voice_channel and len(voice_channel.members) == 1:
+        voice_client = voice_channel.guild.voice_client
+        if voice_client:
+            await voice_client.disconnect()
 
 async def play_voice(textcontent, guild):
-    # Text to speech using gTTS and save as WAV
+    # Text to speech using gTTS and save as MP3
+    print(textcontent)
     tts = gTTS(textcontent, lang='ja')
-    tts.save('out.wav')
+    tts.save('out.mp3')
+
+    # Convert MP3 to WAV using pydub
+    sound = AudioSegment.from_mp3('out.mp3')
+    sound.export('out.wav', format='wav')
 
     # Get voice client
     voice_client = guild.voice_client
