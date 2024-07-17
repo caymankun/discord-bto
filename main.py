@@ -66,7 +66,7 @@ async def on_message(message):
 
 async def play_voice(textcontent, guild):
     # Text to speech using gTTS and save as WAV
-    tts = gTTS(text=textcontent, lang='ja')
+    tts = gTTS(textcontent, lang='ja')
     tts.save('out.wav')
 
     # Get voice client
