@@ -101,7 +101,7 @@ async def download_and_play(url, guild):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
-    subprocess.run(['ffmpeg', '-i', 'downloaded_audio.mp3', 'downloaded_audio.wav'])
+    subprocess.run(['ffmpeg', '-i', '-y' , 'downloaded_audio.mp3', 'downloaded_audio.wav'])
 
     voice_client = guild.voice_client
     if voice_client:
