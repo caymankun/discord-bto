@@ -90,7 +90,7 @@ async def download_and_play(url, guild):
     
     ydl_opts = {
         "format": "mp3/bestaudio/best",
-        'outtmpl': 'out.mp3',
+        'outtmpl': 'out',
         'noplaylist': True,  # プレイリストをダウンロードしない
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
