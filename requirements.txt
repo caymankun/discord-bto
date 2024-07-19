@@ -2,5 +2,5 @@ requests
 discord.py
 pynacl
 ffmpeg
-gtts
+yt-dlp
 pydub
