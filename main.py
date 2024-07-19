@@ -42,6 +42,7 @@ async def disconnect(interaction: discord.Interaction):
 async def play(interaction: discord.Interaction, url: str):
     voice_client = interaction.guild.voice_client
     if voice_client:
+        url = convert_playlist_url_to_video_url(url)
         await interaction.response.send_message(f'{url}から音楽を再生します。')
         await download_and_play(url, interaction.guild)
     else:
@@ -71,20 +72,31 @@ async def on_message(message):
         voice_client = message.guild.voice_client
         if voice_client:
             url = message.content.split(' ')[1]
+            url = convert_playlist_url_to_video_url(url)
             await message.channel.send(f'{url}から音楽を再生します。')
             await download_and_play(url, message.guild)
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
 
+def convert_playlist_url_to_video_url(url):
+    # プレイリストURLかどうかを確認し、動画URLに変換
+    playlist_pattern = re.compile(r'(https://www\.youtube\.com/watch\?v=[^&]+)&list=[^&]+')
+    match = playlist_pattern.match(url)
+    if match:
+        return match.group(1)
+    return url
+
 async def download_and_play(url, guild):
+    
     ydl_opts = {
         "format": "mp3/bestaudio/best",
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-            }
-        ],
+        'outtmpl': 'out.mp3',
+        'noplaylist': True,  # プレイリストをダウンロードしない
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
