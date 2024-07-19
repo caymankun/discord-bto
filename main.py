@@ -21,30 +21,31 @@ async def on_ready():
     print('サービス起動しました。')
     await tree.sync()
 
-@tree.command(name='connect', description='ボットをボイスチャンネルに接続します')
-async def connect(interaction: discord.Interaction):
-    if interaction.user.voice:  # interactionから相互作用を発生させたユーザーを取得し、そのメンバーがボイスチャンネルに接続しているか確認します
-        voice_channel = await interaction.user.voice.channel.connect()
-        await interaction.response.send_message(f'ボイスチャンネルに接続しました。')
-    else:
-        await interaction.response.send_message('ボイスチャンネルに接続していません。')
-
-@tree.command(name='disconnect', description='ボットをボイスチャンネルから切断します')
-async def disconnect(interaction: discord.Interaction):
-    voice_client = interaction.guild.voice_client
-    if voice_client:
-        await voice_client.disconnect()
-        await interaction.response.send_message('ボイスチャンネルから切断しました。')
-    else:
-        await interaction.response.send_message('ボイスチャンネルに接続していません。')
-
 @tree.command(name='play', description='URLから音楽を再生します')
 async def play(interaction: discord.Interaction, url: str):
-    voice_client = interaction.guild.voice_client
-    if voice_client:
+    if interaction.user.voice:
+        voice_channel = interaction.user.voice.channel
+        voice_client = interaction.guild.voice_client
+
+        if voice_client and voice_client.channel != voice_channel:
+            await voice_client.disconnect()
+            voice_client = await voice_channel.connect()
+        elif not voice_client:
+            voice_client = await voice_channel.connect()
+
         url = convert_playlist_url_to_video_url(url)
         await interaction.response.send_message(f'{url}から音楽を再生します。')
         await download_and_play(url, interaction.guild)
+    else:
+        await interaction.response.send_message('ボイスチャンネルに接続していません。')
+
+@tree.command(name='stop', description='音楽を停止し、ボイスチャンネルから切断します')
+async def stop(interaction: discord.Interaction):
+    voice_client = interaction.guild.voice_client
+    if voice_client:
+        voice_client.stop()
+        await voice_client.disconnect()
+        await interaction.response.send_message('音楽を停止し、ボイスチャンネルから切断しました。')
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
@@ -79,7 +80,6 @@ async def on_message(message):
             await message.channel.send('ボイスチャンネルに接続していません。')
 
 def convert_playlist_url_to_video_url(url):
-    # プレイリストURLかどうかを確認し、動画URLに変換
     playlist_pattern = re.compile(r'(https://www\.youtube\.com/watch\?v=[^&]+)&list=[^&]+')
     match = playlist_pattern.match(url)
     if match:
@@ -87,11 +87,10 @@ def convert_playlist_url_to_video_url(url):
     return url
 
 async def download_and_play(url, guild):
-    
     ydl_opts = {
-        "format": "mp3/bestaudio/best",
-        'outtmpl': 'out',
-        'noplaylist': True,  # プレイリストをダウンロードしない
+        'format': 'bestaudio/best',
+        'outtmpl': 'downloaded_audio.%(ext)s',
+        'noplaylist': True,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -102,17 +101,12 @@ async def download_and_play(url, guild):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
-    # Convert MP3 to WAV using pydub
-    sound = AudioSegment.from_mp3('out.mp3')
-    sound.export('out.wav', format='wav')
+    subprocess.run(['ffmpeg', '-i', 'downloaded_audio.mp3', 'downloaded_audio.wav'])
 
-    # Get voice client
     voice_client = guild.voice_client
     if voice_client:
-        # Play WAV file in the voice channel
         voice_client.play(FFmpegPCMAudio('downloaded_audio.wav'))
     else:
         await guild.text_channels[0].send('ボイスチャンネルに接続していません。')
-
 
 bot.run(TOKEN)
