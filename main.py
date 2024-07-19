@@ -5,8 +5,8 @@ import os
 import re
 import requests
 import subprocess
-from gtts import gTTS
 from pydub import AudioSegment
+import yt_dlp
 
 TOKEN = os.getenv('TOKEN')
 
@@ -38,6 +38,15 @@ async def disconnect(interaction: discord.Interaction):
     else:
         await interaction.response.send_message('ボイスチャンネルに接続していません。')
 
+@tree.command(name='play', description='URLから音楽を再生します')
+async def play(interaction: discord.Interaction, url: str):
+    voice_client = interaction.guild.voice_client
+    if voice_client:
+        await interaction.response.send_message(f'{url}から音楽を再生します。')
+        await download_and_play(url, interaction.guild)
+    else:
+        await interaction.response.send_message('ボイスチャンネルに接続していません。')
+
 @bot.event
 async def on_message(message):
     if message.author == bot.user:  # ボット自身のメッセージは無視
@@ -58,45 +67,29 @@ async def on_message(message):
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
 
-    elif message.guild.voice_client:
-        content = message.content
-        content = re.sub(r'https?://\S+', 'URL', content)
-        content = re.sub(r'\|\|([^|]+)\|\|', r'\1', content)
-
-        await play_voice(content, message.guild)
-
-@bot.event
-async def on_voice_state_update(member, before, after):
-    if member == bot.user:
-        return
-
-    if before.channel is None and after.channel is not None:
-        # ユーザーがボイスチャンネルに参加した
-        message = f"{member.display_name}がボイスチャンネルに参加しました。"
-    elif before.channel is not None and after.channel is None:
-        # ユーザーがボイスチャンネルから退出した
-        message = f"{member.display_name}がボイスチャンネルから退出しました。"
-    else:
-        return
-
-    # ボイスチャンネルにメッセージを送信
-    voice_client = after.channel.guild.voice_client if after.channel else before.channel.guild.voice_client
-    if voice_client:
-        await play_voice(message, voice_client.guild)
-
-    # もしボイスチャンネルにボット以外のメンバーがいない場合、ボットを切断
-    voice_channel = before.channel if before.channel is not None else after.channel
-    if voice_channel and len(voice_channel.members) == 1:
-        voice_client = voice_channel.guild.voice_client
+    elif message.content.startswith('/play'):
+        voice_client = message.guild.voice_client
         if voice_client:
-            await voice_client.disconnect()
+            url = message.content.split(' ')[1]
+            await message.channel.send(f'{url}から音楽を再生します。')
+            await download_and_play(url, message.guild)
+        else:
+            await message.channel.send('ボイスチャンネルに接続していません。')
 
-async def play_voice(textcontent, guild):
-    # Text to speech using gTTS and save as MP3
-    print(textcontent)
-    tts = gTTS(textcontent, lang='ja')
-    tts.save('out.mp3')
-
+async def download_and_play(url, guild):
+    ydl_opts = {
+        "format": "mp3/bestaudio/best",
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+            }
+        ],
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    
     # Convert MP3 to WAV using pydub
     sound = AudioSegment.from_mp3('out.mp3')
     sound.export('out.wav', format='wav')
@@ -105,7 +98,7 @@ async def play_voice(textcontent, guild):
     voice_client = guild.voice_client
     if voice_client:
         # Play WAV file in the voice channel
-        voice_client.play(FFmpegPCMAudio('out.wav'))
+        voice_client.play(FFmpegPCMAudio('downloaded_audio.wav'))
     else:
         await guild.text_channels[0].send('ボイスチャンネルに接続していません。')
 
