@@ -88,8 +88,8 @@ def convert_playlist_url_to_video_url(url):
 
 async def download_and_play(url, guild):
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': 'downloaded_audio.%(ext)s',
+        'format': 'worstaudio',
+        'outtmpl': 'downloaded_audio.mp3',
         'noplaylist': True,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
@@ -101,7 +101,11 @@ async def download_and_play(url, guild):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
-    subprocess.run(['ffmpeg', '-i', '-y' , 'downloaded_audio.mp3', 'downloaded_audio.wav'])
+    # MP3ファイルを読み込み
+audio = AudioSegment.from_mp3('downloaded_audio.mp3')
+
+# WAVファイルに変換して保存
+audio.export('downloaded_audio.wav', format='wav')
 
     voice_client = guild.voice_client
     if voice_client:
