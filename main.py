@@ -88,18 +88,18 @@ def convert_playlist_url_to_video_url(url):
 
 async def download_and_play(url, guild):
     ydl_opts = {
-        'format': 'wa',
-        'outtmpl': 'downloaded_audio.mp3',
+        'format': 'worstaudio/worst',
+        'outtmpl': 'downloaded_audio.%(ext)s',
         'noplaylist': True,
     }
-    
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+
+    # 音声をダウンロード
+    with YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    
     # MP3ファイルを読み込み
-    audio = AudioSegment.from_mp3('downloaded_audio.mp3')
-    
+    audio = AudioSegment.from_file('downloaded_audio.webm')  # 'webm'や他のフォーマットを確認
+
     # WAVファイルに変換して保存
     audio.export('downloaded_audio.wav', format='wav')
 
