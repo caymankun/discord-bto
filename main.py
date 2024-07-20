@@ -74,7 +74,7 @@ async def on_message(message):
         if voice_client:
             url = message.content.split(' ')[1]
             url = convert_playlist_url_to_video_url(url)
-            await message.channel.send(f'{url}から音楽を再生します。')
+            await message.channel.send(f'{url}')
             await download_and_play(url, message.guild)
         else:
             await message.channel.send('ボイスチャンネルに接続していません。')
@@ -88,24 +88,20 @@ def convert_playlist_url_to_video_url(url):
 
 async def download_and_play(url, guild):
     ydl_opts = {
-        'format': 'worstaudio',
-        'outtmpl': 'downloaded_audio.mp3',
+        'format': 'wav',
+        'outtmpl': 'downloaded_audio.wav',
         'noplaylist': True,
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
+
     
     # MP3ファイルを読み込み
-    audio = AudioSegment.from_mp3('downloaded_audio.mp3')
+    #audio = AudioSegment.from_mp3('downloaded_audio.mp3')
     
     # WAVファイルに変換して保存
-    audio.export('downloaded_audio.wav', format='wav')
+    #audio.export('downloaded_audio.wav', format='wav')
 
     voice_client = guild.voice_client
     if voice_client:
