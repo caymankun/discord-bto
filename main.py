@@ -88,7 +88,7 @@ def convert_playlist_url_to_video_url(url):
 
 async def download_and_play(url, guild):
     ydl_opts = {
-        'format': 'wav',
+        'format': 'wa',
         'outtmpl': 'downloaded_audio.wav',
         'noplaylist': True,
     }
