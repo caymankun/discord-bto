@@ -6,7 +6,7 @@ import re
 import requests
 import subprocess
 from pydub import AudioSegment
-import yt_dlp
+from yt_dlp import YoutubeDL
 
 TOKEN = os.getenv('TOKEN')
 
