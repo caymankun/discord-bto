@@ -102,10 +102,10 @@ async def download_and_play(url, guild):
         ydl.download([url])
     
     # MP3ファイルを読み込み
-audio = AudioSegment.from_mp3('downloaded_audio.mp3')
-
-# WAVファイルに変換して保存
-audio.export('downloaded_audio.wav', format='wav')
+    audio = AudioSegment.from_mp3('downloaded_audio.mp3')
+    
+    # WAVファイルに変換して保存
+    audio.export('downloaded_audio.wav', format='wav')
 
     voice_client = guild.voice_client
     if voice_client:
