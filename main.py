@@ -89,7 +89,7 @@ def convert_playlist_url_to_video_url(url):
 async def download_and_play(url, guild):
     ydl_opts = {
         'format': 'wa',
-        'outtmpl': 'downloaded_audio.wav',
+        'outtmpl': 'downloaded_audio.mp3',
         'noplaylist': True,
     }
     
@@ -98,10 +98,10 @@ async def download_and_play(url, guild):
 
     
     # MP3ファイルを読み込み
-    #audio = AudioSegment.from_mp3('downloaded_audio.mp3')
+    audio = AudioSegment.from_mp3('downloaded_audio.mp3')
     
     # WAVファイルに変換して保存
-    #audio.export('downloaded_audio.wav', format='wav')
+    audio.export('downloaded_audio.wav', format='wav')
 
     voice_client = guild.voice_client
     if voice_client:
